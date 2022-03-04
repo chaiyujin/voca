@@ -24,7 +24,7 @@ import configparser
 import tensorflow as tf
 
 from config_parser import read_config, create_default_config
-from utils.data_handler import DataHandler
+from utils.data_handler_celeb import DataHandler
 from utils.batcher import Batcher
 from utils.voca_model import VOCAModel as Model
 
@@ -45,7 +45,10 @@ def main():
     # Path to cache the processed audio
     config.set('Input Output', 'processed_audio_path', './training_data/processed_audio_%s.pkl' % config.get('Audio Parameters', 'audio_feature_type'))
 
+    celeb = config.get('Input Output', 'celeb')
     checkpoint_dir = config.get('Input Output', 'checkpoint_dir')
+    checkpoint_dir = os.path.join(checkpoint_dir, celeb)
+    config.set('Input Output', 'checkpoint_dir', checkpoint_dir)
     if os.path.exists(checkpoint_dir):
         print('Checkpoint dir already exists %s' % checkpoint_dir)
         key = input('Press "q" to quit, "x" to erase existing folder, and any other key to continue training: ')

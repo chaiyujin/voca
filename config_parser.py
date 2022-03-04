@@ -25,11 +25,18 @@ def set_default_paramters(config):
     config.set('Input Output', 'template_fname', './template/FLAME_sample.ply')
     config.set('Input Output', 'deepspeech_graph_fname', './ds_graph/output_graph.pb')
 
-    config.set('Input Output', 'verts_mmaps_path', './training_data/data_verts.npy')
-    config.set('Input Output', 'raw_audio_path', './training_data/raw_audio_fixed.pkl')
-    config.set('Input Output', 'processed_audio_path', '')
-    config.set('Input Output', 'templates_path', './training_data/templates.pkl')
+    config.set('Input Output', 'verts_mmaps_path',      './training_data/data_verts.npy')
+    config.set('Input Output', 'raw_audio_path',        './training_data/raw_audio_fixed.pkl')
+    config.set('Input Output', 'processed_audio_path',  '')
+    config.set('Input Output', 'templates_path',        './training_data/templates.pkl')
     config.set('Input Output', 'data2array_verts_path', './training_data/subj_seq_to_idx.pkl')
+
+    config.set('Input Output', 'celeb',                       'm001_trump')
+    config.set('Input Output', 'celeb_verts_mmaps_path',      './training_data_celeb/{}/data_verts.npy')
+    config.set('Input Output', 'celeb_raw_audio_path',        './training_data_celeb/{}/raw_audio.pkl')
+    config.set('Input Output', 'celeb_processed_audio_path',  './training_data_celeb/{}/processed_audio_deepspeech.pkl')
+    config.set('Input Output', 'celeb_templates_path',        './training_data_celeb/{}/templates.pkl')
+    config.set('Input Output', 'celeb_data2array_verts_path', './training_data_celeb/{}/subj_seq_to_idx.pkl')
 
     #Audio paramters
     config.add_section('Audio Parameters')
@@ -110,13 +117,19 @@ def read_config(fname):
     config_parms['templates_path'] = config.get('Input Output', 'templates_path')
     config_parms['data2array_verts_path'] = config.get('Input Output', 'data2array_verts_path')
 
+    config_parms['celeb']                       = config.get('Input Output', 'celeb')
+    config_parms['celeb_verts_mmaps_path']      = config.get('Input Output', 'celeb_verts_mmaps_path')
+    config_parms['celeb_raw_audio_path']        = config.get('Input Output', 'celeb_raw_audio_path')
+    config_parms['celeb_processed_audio_path']  = config.get('Input Output', 'celeb_processed_audio_path')
+    config_parms['celeb_templates_path']        = config.get('Input Output', 'celeb_templates_path')
+    config_parms['celeb_data2array_verts_path'] = config.get('Input Output', 'celeb_data2array_verts_path')
+
     config_parms['audio_feature_type'] = config.get('Audio Parameters', 'audio_feature_type')
     config_parms['num_audio_features'] = config.getint('Audio Parameters', 'num_audio_features')
     config_parms['audio_window_size'] = config.getint('Audio Parameters', 'audio_window_size')
     config_parms['audio_window_stride'] = config.getint('Audio Parameters', 'audio_window_stride')
     config_parms['condition_speech_features'] = config.getboolean('Audio Parameters', 'condition_speech_features')
     config_parms['speech_encoder_size_factor'] = config.getfloat('Audio Parameters', 'speech_encoder_size_factor')
-
 
     config_parms['num_vertices'] = config.getint('Model Parameters', 'num_vertices')
     config_parms['expression_dim'] = config.getint('Model Parameters', 'expression_dim')
@@ -144,9 +157,13 @@ def read_config(fname):
     config_parms['num_render_sequences'] = config.getint('Visualization Parameters', 'num_render_sequences')
     return config_parms
 
+
 if __name__ == '__main__':
     pkg_path, _ = os.path.split(os.path.realpath(__file__))
     config_fname = os.path.join(pkg_path, 'training_config.cfg')
 
     print('Writing default config file - %s' % config_fname)
     create_default_config(config_fname)
+
+    conf = read_config(config_fname)
+    print(conf['celeb'])

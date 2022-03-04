@@ -1,0 +1,6 @@
+*.py[cod]
+training_data*
+training_data*/
+training/
+runs/
+*.pb
