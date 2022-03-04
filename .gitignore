@@ -4,3 +4,4 @@ training_data*/
 training/
 runs/
 *.pb
+.snaps/
