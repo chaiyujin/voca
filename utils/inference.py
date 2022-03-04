@@ -20,8 +20,10 @@ import os
 import cv2
 import scipy
 import tempfile
+import ffmpeg
 import numpy as np
 import tensorflow as tf
+from shutil import copyfile
 from subprocess import call
 from scipy.io import wavfile
 
@@ -100,6 +102,10 @@ def render_sequence_meshes(audio_fname, sequence_vertices, template, out_path, u
 
 def inference(tf_model_fname, ds_fname, audio_fname, template_fname, condition_idx, out_path, render_sequence=True, uv_template_fname='', texture_img_fname=''):
     template = Mesh(filename=template_fname)
+
+    apath = os.path.join(out_path, "audio.wav")
+    ffmpeg.input(audio_fname).output(apath, ac=1, ar=16000).run(overwrite_output=True, quiet=False)
+    audio_fname = apath
 
     sample_rate, audio = wavfile.read(audio_fname)
     if audio.ndim != 1:

@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import meshio
 import librosa
+from shutil import copyfile
 from tqdm import tqdm
 from glob import glob
 
@@ -32,15 +33,16 @@ def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
     os.makedirs(tgt_dir, exist_ok=True)
 
     # source identity
-    iden_path = os.path.join(src_dir, "fitted_identity/idle.obj")
+    iden_path = os.path.join(src_dir, "fitted/identity/identity.obj")
     assert os.path.exists(iden_path)
-    idle = meshio.load_mesh(iden_path)[0]
+    idle, tris, _ = meshio.load_mesh(iden_path)
+    meshio.save_ply(f"./template/{speaker}.ply", idle, tris)
     with open(os.path.join(tgt_dir, "templates.pkl"), "wb") as fp:
         pickle.dump({speaker: idle}, fp)
 
     # find fitted videos
     tasks = []
-    for cur_root, subdirs, _ in os.walk(os.path.join(src_dir, "fitted_video")):
+    for cur_root, subdirs, _ in os.walk(os.path.join(src_dir, "fitted")):
         for subdir in subdirs:
             if subdir not in use_seqs:
                 continue
@@ -48,7 +50,7 @@ def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
             tasks.append(os.path.join(cur_root, subdir))
         break
     print(tasks)
-    
+
     # load and cache
     face_verts = []
     raw_audios = {speaker: {}}
@@ -57,17 +59,15 @@ def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
         subj = speaker
         seq = os.path.basename(task)
         # load audio
-        audio, sr = librosa.load(os.path.join(task, "audio.wav"), sr=16000)
+        ss = task.split('/')
+        apath = os.path.join('/'.join(ss[:-2]), ss[-1], "audio.wav")
+        copyfile(apath, os.path.join(tgt_dir, f"{ss[-1]}.wav"))
+        audio, sr = librosa.load(apath, sr=16000)
         audio = (audio * 32767).astype(np.int16)
         raw_audios[subj][seq] = dict(audio=audio, sample_rate=sr)
         # load verts
-        bin_list = glob(os.path.join(task, "meshes/frame_*.bin"))
-        bin_list = sorted(bin_list)
-        frames = []
-        for bin_path in bin_list:
-            verts_frame = np.memmap(bin_path, dtype="float32", mode="r").__array__()
-            verts_frame = np.resize(verts_frame, (5023, 3))
-            frames.append(verts_frame)
+        npy_list = glob(os.path.join(task, "meshes/*.npy"))
+        frames = [np.load(x) for x in sorted(npy_list)]
         frames = np.asarray(frames)
         frames = np.reshape(frames, (len(frames), 5023 * 3))
         frames = interpolate_features(frames, 30, 60)
@@ -89,7 +89,7 @@ def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--speaker", type=str, required=True)
-    parser.add_argument("--source_dir", type=str, default="~/assets/CelebTalk/Processed")
+    parser.add_argument("--source_dir", type=str, default="~/Documents/Project2021/stylized-sa/data/datasets/talk_video/celebtalk/data")
     parser.add_argument("--target_dir", type=str, default="./training_data_celeb")
     parser.add_argument("--use_seqs", type=str, default="")
     args = parser.parse_args()

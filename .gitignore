@@ -5,3 +5,5 @@ training/
 runs/
 *.pb
 .snaps/
+results/
+template/*.ply
