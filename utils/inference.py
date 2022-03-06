@@ -23,6 +23,7 @@ import tempfile
 import ffmpeg
 import numpy as np
 import tensorflow as tf
+from tqdm import trange
 from shutil import copyfile
 from subprocess import call
 from scipy.io import wavfile
@@ -45,7 +46,7 @@ def process_audio(ds_path, audio, sample_rate):
     return audio_handler.process(tmp_audio)['subj']['seq']['audio']
 
 
-def output_sequence_meshes(sequence_vertices, template, out_path, uv_template_fname='', texture_img_fname=''):
+def output_sequence_meshes(sequence_vertices, template, out_path, uv_template_fname='', texture_img_fname='', fps=60):
     mesh_out_path = os.path.join(out_path, 'meshes')
     if not os.path.exists(mesh_out_path):
         os.makedirs(mesh_out_path)
@@ -56,25 +57,31 @@ def output_sequence_meshes(sequence_vertices, template, out_path, uv_template_fn
     else:
         vt, ft = None, None
 
+    if fps != 60:
+        assert (60 / fps).is_integer()
+        hop = int(60 / fps)
+        sequence_vertices = sequence_vertices[::hop]
+
     num_frames = sequence_vertices.shape[0]
-    for i_frame in range(num_frames):
-        out_fname = os.path.join(mesh_out_path, '%05d.obj' % i_frame)
+    for i_frame in trange(num_frames, desc="dump meshes"):
+        out_fname = os.path.join(mesh_out_path, '%05d.ply' % i_frame)
         out_mesh = Mesh(sequence_vertices[i_frame], template.f)
         if vt is not None and ft is not None:
             out_mesh.vt, out_mesh.ft = vt, ft
         if os.path.exists(texture_img_fname):
             out_mesh.set_texture_image(texture_img_fname)
-        out_mesh.write_obj(out_fname)
+        # out_mesh.write_obj(out_fname)
+        out_mesh.write_ply(out_fname)
 
-def render_sequence_meshes(audio_fname, sequence_vertices, template, out_path, uv_template_fname='', texture_img_fname=''):
+def render_sequence_meshes(audio_fname, sequence_vertices, template, out_path, uv_template_fname='', texture_img_fname='', fps=60):
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 
     tmp_video_file = tempfile.NamedTemporaryFile('w', suffix='.mp4', dir=out_path)
     if int(cv2.__version__[0]) < 3:
-        writer = cv2.VideoWriter(tmp_video_file.name, cv2.cv.CV_FOURCC(*'mp4v'), 60, (800, 800), True)
+        writer = cv2.VideoWriter(tmp_video_file.name, cv2.cv.CV_FOURCC(*'mp4v'), fps, (800, 800), True)
     else:
-        writer = cv2.VideoWriter(tmp_video_file.name, cv2.VideoWriter_fourcc(*'mp4v'), 60, (800, 800), True)
+        writer = cv2.VideoWriter(tmp_video_file.name, cv2.VideoWriter_fourcc(*'mp4v'), fps, (800, 800), True)
 
     if os.path.exists(uv_template_fname) and os.path.exists(texture_img_fname):
         uv_template = Mesh(filename=uv_template_fname)
@@ -100,7 +107,7 @@ def render_sequence_meshes(audio_fname, sequence_vertices, template, out_path, u
     call(cmd)
 
 
-def inference(tf_model_fname, ds_fname, audio_fname, template_fname, condition_idx, out_path, render_sequence=True, uv_template_fname='', texture_img_fname=''):
+def inference(tf_model_fname, ds_fname, audio_fname, template_fname, condition_idx, out_path, render_sequence=True, uv_template_fname='', texture_img_fname='', fps=60):
     template = Mesh(filename=template_fname)
 
     apath = os.path.join(out_path, "audio.wav")
@@ -112,7 +119,12 @@ def inference(tf_model_fname, ds_fname, audio_fname, template_fname, condition_i
         print('Audio has multiple channels, only first channel is considered')
         audio = audio[:,0]
 
-    processed_audio = process_audio(ds_fname, audio, sample_rate)
+    npy_feat = os.path.join(out_path, "audio_features", "deepspeech.npy")
+    if not os.path.exists(npy_feat):
+        processed_audio = process_audio(ds_fname, audio, sample_rate)
+        os.makedirs(os.path.dirname(npy_feat), exist_ok=True)
+        np.save(npy_feat, processed_audio)
+    processed_audio = np.load(npy_feat)
 
     # Load previously saved meta graph in the default graph
     saver = tf.train.import_meta_graph(tf_model_fname + '.meta')
@@ -134,9 +146,9 @@ def inference(tf_model_fname, ds_fname, audio_fname, template_fname, condition_i
         # Restore trained model
         saver.restore(session, tf_model_fname)
         predicted_vertices = np.squeeze(session.run(output_decoder, feed_dict))
-        output_sequence_meshes(predicted_vertices, template, out_path)
+        output_sequence_meshes(predicted_vertices, template, out_path, fps=fps)
         if(render_sequence):
-            render_sequence_meshes(audio_fname, predicted_vertices, template, out_path, uv_template_fname, texture_img_fname)
+            render_sequence_meshes(audio_fname, predicted_vertices, template, out_path, uv_template_fname, texture_img_fname, fps=fps)
     tf.reset_default_graph()
 
 

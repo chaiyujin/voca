@@ -28,6 +28,8 @@ def interpolate_features(features, input_rate, output_rate, output_len=None):
 def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
     src_dir = os.path.expanduser(src_dir)
     tgt_dir = os.path.expanduser(tgt_dir)
+    exp_dir = tgt_dir
+
     src_dir = os.path.join(src_dir, speaker)
     tgt_dir = os.path.join(tgt_dir, speaker, "data", "train")
     os.makedirs(tgt_dir, exist_ok=True)
@@ -36,7 +38,7 @@ def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
     iden_path = os.path.join(src_dir, "fitted/identity/identity.obj")
     assert os.path.exists(iden_path)
     idle, tris, _ = meshio.load_mesh(iden_path)
-    meshio.save_ply(f"./template/{speaker}.ply", idle, tris)
+    meshio.save_ply(os.path.join(exp_dir, "template.ply"), idle, tris)
     with open(os.path.join(tgt_dir, "templates.pkl"), "wb") as fp:
         pickle.dump({speaker: idle}, fp)
 

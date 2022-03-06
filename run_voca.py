@@ -46,16 +46,16 @@ def str2bool(val):
     return False
 
 
-def render_results(res_dir):
+def render_results(res_dir, fps):
     vpath = os.path.join(res_dir, "render.mp4")
     if os.path.exists(vpath):
         return
     apath = os.path.join(res_dir, "audio.wav")
-    obj_files = sorted(glob(os.path.join(res_dir, "meshes/*.obj")))
+    mesh_files = sorted(glob(os.path.join(res_dir, "meshes/*.ply")))
 
-    writer = VideoWriter(vpath, fps=60, src_audio_path=apath, high_quality=True)
-    for obj_file in tqdm(obj_files):
-        vert = meshio.load_mesh(obj_file)[0]
+    writer = VideoWriter(vpath, fps=fps, src_audio_path=apath, high_quality=True)
+    for mesh_file in tqdm(mesh_files, desc="render"):
+        vert = meshio.load_mesh(mesh_file)[0]
         vert = vert[vidx]
         vert = vert * 1.4
         vert[:, 1] += 0.02
@@ -96,7 +96,7 @@ texture_img_fname = args.texture_img_fname
 if not os.path.exists(out_path):
     os.makedirs(out_path)
 
-done_flag = os.path.join(out_path, "meshes", "done.lock")
+done_flag = os.path.join(out_path, "done_meshes.lock")
 if not os.path.exists(done_flag):
     inference(
         tf_model_fname,
@@ -108,8 +108,9 @@ if not os.path.exists(done_flag):
         str2bool(args.visualize),
         uv_template_fname=uv_template_fname,
         texture_img_fname=texture_img_fname,
+        fps=30
     )
     with open(done_flag, "w") as fp:
         fp.write("")
 
-render_results(out_path)
+render_results(out_path, fps=30)

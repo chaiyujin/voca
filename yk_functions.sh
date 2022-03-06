@@ -4,6 +4,26 @@ set -o pipefail
 set -o nounset
 
 CWD=${PWD}
+TALK_VIDEO_ROOT=${CWD}/../../stylized-sa/data/datasets/talk_video
+
+function LoadMediaList() {
+  local filepath=$1;
+  shift 1;
+
+  input=$filepath
+  while IFS= read -r line
+  do
+    # trim
+    line=$(echo $line | xargs)
+    # valid
+    if [ -n "$line" ] && [ "${line:0:1}" != "#" ]; then
+      if [ "${line:0:1}" != "/" ]; then
+        line=$(dirname $filepath)/${line}
+      fi
+      echo "$line"
+    fi
+  done < "$input"
+}
 
 function DRAW_DIVIDER() {
   printf '%*s\n' "${COLUMNS:-$(tput cols)}" ' ' | tr ' ' '-'
@@ -104,18 +124,20 @@ function RUN_YK_EXP() {
   local USE_SEQS=
   local EPOCH=
   local MEDIA_LIST=
-  local DUMP_MESHES=
+  local TEST=
+  local LOAD_STEP=
   local DEBUG=""
   # Override from arguments
   for var in "$@"; do
     case $var in
-      --data_src=*  ) DATA_SRC=${var#*=}  ;;
-      --speaker=*   ) SPEAKER=${var#*=}   ;;
-      --use_seqs=*  ) USE_SEQS=${var#*=}  ;;
-      --epoch=*     ) EPOCH=${var#*=}  ;;
-      --media_list=*) MEDIA_LIST=${var#*=}  ;;
-      --dump_meshes ) DUMP_MESHES="--dump_meshes"  ;;
-      --debug       ) DEBUG="--debug"     ;;
+      --data_src=*  ) DATA_SRC=${var#*=}   ;;
+      --speaker=*   ) SPEAKER=${var#*=}    ;;
+      --use_seqs=*  ) USE_SEQS=${var#*=}   ;;
+      --epoch=*     ) EPOCH=${var#*=}      ;;
+      --media_list=*) MEDIA_LIST=${var#*=} ;;
+      --load_step=* ) LOAD_STEP=${var#*=}  ;;
+      --test        ) TEST="true"          ;;
+      --debug       ) DEBUG="--debug"      ;;
     esac
   done
   # Check variables
@@ -154,5 +176,32 @@ function RUN_YK_EXP() {
     DRAW_DIVIDER;
     RUN_WITH_LOCK_GUARD --tag="Train" --lock_file=$EXP_DIR/../done_train_${EPOCH}.lock -- \
       python3 yk_train.py --exp_dir=${EXP_DIR} --epoch ${EPOCH};
+  fi
+
+  if [ -n "$TEST" ]; then
+    local CKPT="$EXP_DIR/training/checkpoints/gstep_${LOAD_STEP}.model";
+    local TMPL="$EXP_DIR/template.ply"
+    local SHARED="--tf_model_fname=$CKPT --template_fname=$TMPL --condition_idx 1 --visualize=False"
+
+    for d in "$TALK_VIDEO_ROOT/${DATA_SRC}/data/${SPEAKER}"/*; do
+      if [ ! -f "$d/audio.wav" ]; then continue; fi
+      local seq_id="$(basename $d)"
+      python3 run_voca.py $SHARED \
+        --audio_fname=${d}/audio.wav \
+        --out_path="${RES_DIR}/clip-${seq_id}" \
+      ;
+    done
+
+    if [ -n "${MEDIA_LIST}" ]; then
+      local media_list=$(LoadMediaList ${MEDIA_LIST});
+      for media_path in $media_list; do
+        local seq_id="$(basename $media_path)"
+        seq_id="${seq_id%.*}"
+        python3 run_voca.py $SHARED \
+          --audio_fname="$media_path" \
+          --out_path="${RES_DIR}/${seq_id}" \
+        ;
+      done
+    fi
   fi
 }
