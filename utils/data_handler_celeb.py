@@ -226,15 +226,15 @@ class DataHandler:
         self.data2array_verts = pickle.load(open(data2array_verts_path, 'rb'))
 
     def _load_data_celeb(self, config):
-        celeb = load_from_config(config, 'celeb')
-        face_verts_mmaps_path = load_from_config(config, 'celeb_verts_mmaps_path').format(celeb)
-        face_templates_path   = load_from_config(config, 'celeb_templates_path').format(celeb)
-        raw_audio_path        = load_from_config(config, 'celeb_raw_audio_path').format(celeb)
-        processed_audio_path  = load_from_config(config, 'celeb_processed_audio_path').format(celeb)
-        data2array_verts_path = load_from_config(config, 'celeb_data2array_verts_path').format(celeb)
+        face_verts_mmaps_path = load_from_config(config, 'celeb_verts_mmaps_path')
+        face_templates_path   = load_from_config(config, 'celeb_templates_path')
+        raw_audio_path        = load_from_config(config, 'celeb_raw_audio_path')
+        processed_audio_path  = load_from_config(config, 'celeb_processed_audio_path')
+        data2array_verts_path = load_from_config(config, 'celeb_data2array_verts_path')
 
         print("Loading face vertices")
         self.celeb_face_vert_mmap = np.load(face_verts_mmaps_path, mmap_mode='r')
+        assert len(self.celeb_face_vert_mmap) > 0
 
         print("Loading templates")
         self.templates_data.update(pickle.load(open(face_templates_path, 'rb'), encoding='latin1'))

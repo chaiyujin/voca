@@ -29,7 +29,7 @@ def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
     src_dir = os.path.expanduser(src_dir)
     tgt_dir = os.path.expanduser(tgt_dir)
     src_dir = os.path.join(src_dir, speaker)
-    tgt_dir = os.path.join(tgt_dir, speaker)
+    tgt_dir = os.path.join(tgt_dir, speaker, "data", "train")
     os.makedirs(tgt_dir, exist_ok=True)
 
     # source identity
@@ -45,6 +45,8 @@ def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
     for cur_root, subdirs, _ in os.walk(os.path.join(src_dir, "fitted")):
         for subdir in subdirs:
             if subdir not in use_seqs:
+                continue
+            if not subdir.startswith("trn"):
                 continue
             assert subdir.startswith("trn")
             tasks.append(os.path.join(cur_root, subdir))
@@ -88,10 +90,13 @@ def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--data_src", type=str, required=True)
     parser.add_argument("--speaker", type=str, required=True)
-    parser.add_argument("--source_dir", type=str, default="~/Documents/Project2021/stylized-sa/data/datasets/talk_video/celebtalk/data")
-    parser.add_argument("--target_dir", type=str, default="./training_data_celeb")
     parser.add_argument("--use_seqs", type=str, default="")
+    parser.add_argument("--source_dir", type=str, default="~/Documents/Project2021/stylized-sa/data/datasets/talk_video/{}/data")
+    parser.add_argument("--target_dir", type=str, default="./yk_exp/{}")
     args = parser.parse_args()
 
-    process_celeb(args.speaker, args.source_dir, args.target_dir, args.use_seqs)
+    source_dir = args.source_dir.format(args.data_src)
+    target_dir = args.target_dir.format(args.data_src)
+    process_celeb(args.speaker, source_dir, target_dir, args.use_seqs)

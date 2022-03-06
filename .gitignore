@@ -7,3 +7,4 @@ runs/
 .snaps/
 results/
 template/*.ply
+yk_exp/

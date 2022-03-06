@@ -31,12 +31,12 @@ def set_default_paramters(config):
     config.set('Input Output', 'templates_path',        './training_data/templates.pkl')
     config.set('Input Output', 'data2array_verts_path', './training_data/subj_seq_to_idx.pkl')
 
-    config.set('Input Output', 'celeb',                       'm001_trump')
-    config.set('Input Output', 'celeb_verts_mmaps_path',      './training_data_celeb/{}/data_verts.npy')
-    config.set('Input Output', 'celeb_raw_audio_path',        './training_data_celeb/{}/raw_audio.pkl')
-    config.set('Input Output', 'celeb_processed_audio_path',  './training_data_celeb/{}/processed_audio_deepspeech.pkl')
-    config.set('Input Output', 'celeb_templates_path',        './training_data_celeb/{}/templates.pkl')
-    config.set('Input Output', 'celeb_data2array_verts_path', './training_data_celeb/{}/subj_seq_to_idx.pkl')
+    config.set('Input Output', 'celeb',                       '')
+    config.set('Input Output', 'celeb_verts_mmaps_path',      './yk_exp/data_verts.npy')
+    config.set('Input Output', 'celeb_raw_audio_path',        './yk_exp/raw_audio.pkl')
+    config.set('Input Output', 'celeb_processed_audio_path',  './yk_exp/processed_audio_deepspeech.pkl')
+    config.set('Input Output', 'celeb_templates_path',        './yk_exp/templates.pkl')
+    config.set('Input Output', 'celeb_data2array_verts_path', './yk_exp/subj_seq_to_idx.pkl')
 
     #Audio paramters
     config.add_section('Audio Parameters')
