@@ -97,7 +97,7 @@ function RUN_YK_EXP() {
 
   if [ -n "$EPOCH" ]; then
     DRAW_DIVIDER;
-    RUN_WITH_LOCK_GUARD --tag="Train" --lock_file=$EXP_DIR/../done_train_${EPOCH}.lock -- \
+    RUN_WITH_LOCK_GUARD --tag="Train" --lock_file=$EXP_DIR/done_train_${EPOCH}.lock -- \
       python3 yk_train.py --exp_dir=${EXP_DIR} --epoch ${EPOCH};
   fi
 
