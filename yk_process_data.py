@@ -38,7 +38,7 @@ def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
     iden_path = os.path.join(src_dir, "fitted/identity/identity.obj")
     assert os.path.exists(iden_path)
     idle, tris, _ = meshio.load_mesh(iden_path)
-    meshio.save_ply(os.path.join(exp_dir, "template.ply"), idle, tris)
+    meshio.save_ply(os.path.join(exp_dir, speaker, "template.ply"), idle, tris)
     with open(os.path.join(tgt_dir, "templates.pkl"), "wb") as fp:
         pickle.dump({speaker: idle}, fp)
 

@@ -51,11 +51,12 @@ def render_results(res_dir, fps):
     if os.path.exists(vpath):
         return
     apath = os.path.join(res_dir, "audio.wav")
-    mesh_files = sorted(glob(os.path.join(res_dir, "meshes/*.ply")))
+    mesh_files = sorted(glob(os.path.join(res_dir, "meshes/*.npy")))
 
     writer = VideoWriter(vpath, fps=fps, src_audio_path=apath, high_quality=True)
     for mesh_file in tqdm(mesh_files, desc="render"):
-        vert = meshio.load_mesh(mesh_file)[0]
+        # vert = meshio.load_mesh(mesh_file)[0]
+        vert = np.load(mesh_file)
         vert = vert[vidx]
         vert = vert * 1.4
         vert[:, 1] += 0.02

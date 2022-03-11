@@ -64,14 +64,18 @@ def output_sequence_meshes(sequence_vertices, template, out_path, uv_template_fn
 
     num_frames = sequence_vertices.shape[0]
     for i_frame in trange(num_frames, desc="dump meshes"):
-        out_fname = os.path.join(mesh_out_path, '%05d.ply' % i_frame)
-        out_mesh = Mesh(sequence_vertices[i_frame], template.f)
-        if vt is not None and ft is not None:
-            out_mesh.vt, out_mesh.ft = vt, ft
-        if os.path.exists(texture_img_fname):
-            out_mesh.set_texture_image(texture_img_fname)
-        # out_mesh.write_obj(out_fname)
-        out_mesh.write_ply(out_fname)
+        out_fname = os.path.join(mesh_out_path, '%05d.npy' % i_frame)
+        np.save(out_fname, sequence_vertices[i_frame])
+
+        # out_fname = os.path.join(mesh_out_path, '%05d.ply' % i_frame)
+        # out_mesh = Mesh(sequence_vertices[i_frame], template.f)
+        # if vt is not None and ft is not None:
+        #     out_mesh.vt, out_mesh.ft = vt, ft
+        # if os.path.exists(texture_img_fname):
+        #     out_mesh.set_texture_image(texture_img_fname)
+        # # out_mesh.write_obj(out_fname)
+        # out_mesh.write_ply(out_fname)
+
 
 def render_sequence_meshes(audio_fname, sequence_vertices, template, out_path, uv_template_fname='', texture_img_fname='', fps=60):
     if not os.path.exists(out_path):
