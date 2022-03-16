@@ -75,6 +75,7 @@ function RUN_YK_EXP() {
     local TMPL="$EXP_DIR/template.ply"
     local SHARED="--tf_model_fname=$CKPT --template_fname=$TMPL --condition_idx 1 --visualize=False"
 
+    # dataset
     for d in "$TALK_VIDEO_ROOT/${DATA_SRC}/data/${SPEAKER}"/*; do
       if [ ! -f "$d/audio.wav" ]; then continue; fi
       local seq_id="$(basename $d)"
@@ -84,6 +85,7 @@ function RUN_YK_EXP() {
       ;
     done
 
+    # media_list if given
     if [ -n "${MEDIA_LIST}" ]; then
       local media_list=$(LoadMediaList ${MEDIA_LIST});
       for media_info in $media_list; do
