@@ -25,7 +25,7 @@ def interpolate_features(features, input_rate, output_rate, output_len=None):
     return output_features
 
 
-def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
+def process_celeb(speaker, src_dir, tgt_dir):
     src_dir = os.path.expanduser(src_dir)
     tgt_dir = os.path.expanduser(tgt_dir)
     exp_dir = tgt_dir
@@ -46,8 +46,6 @@ def process_celeb(speaker, src_dir, tgt_dir, use_seqs):
     tasks = []
     for cur_root, subdirs, _ in os.walk(os.path.join(src_dir, "fitted")):
         for subdir in subdirs:
-            if subdir not in use_seqs:
-                continue
             if not subdir.startswith("trn"):
                 continue
             assert subdir.startswith("trn")
@@ -94,11 +92,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_src", type=str, required=True)
     parser.add_argument("--speaker", type=str, required=True)
-    parser.add_argument("--use_seqs", type=str, default="")
     parser.add_argument("--source_dir", type=str, default="~/Documents/Project2021/stylized-sa/data/datasets/talk_video/{}/data")
     parser.add_argument("--target_dir", type=str, default="./yk_exp/{}")
     args = parser.parse_args()
 
     source_dir = args.source_dir.format(args.data_src)
     target_dir = args.target_dir.format(args.data_src)
-    process_celeb(args.speaker, source_dir, target_dir, args.use_seqs)
+    process_celeb(args.speaker, source_dir, target_dir)

@@ -60,23 +60,47 @@ def set_default_paramters(config):
     config.set('Model Parameters', 'acceleration_weight', '0.0')              # 0.0
     config.set('Model Parameters', 'verts_regularizer_weight', '0.0')         # 0.0
 
+    # config.add_section('Data Setup')
+    # config.set('Data Setup', 'subject_for_training',
+    #            "FaceTalk_170728_03272_TA FaceTalk_170904_00128_TA FaceTalk_170725_00137_TA FaceTalk_170915_00223_TA "
+    #            "FaceTalk_170811_03274_TA FaceTalk_170913_03279_TA FaceTalk_170904_03276_TA FaceTalk_170912_03278_TA ")
+    # config.set('Data Setup', 'sequence_for_training',
+    #             "sentence01 sentence02 sentence03 sentence04 sentence05 sentence06 sentence07 sentence08 sentence09 sentence10 "
+    #             "sentence11 sentence12 sentence13 sentence14 sentence15 sentence16 sentence17 sentence18 sentence19 sentence20 "
+    #             "sentence21 sentence22 sentence23 sentence24 sentence25 sentence26 sentence27 sentence28 sentence29 sentence30 "
+    #             "sentence31 sentence32 sentence33 sentence34 sentence35 sentence36 sentence37 sentence38 sentence39 sentence40")
+    # config.set('Data Setup', 'subject_for_validation', "FaceTalk_170811_03275_TA FaceTalk_170908_03277_TA")
+    # config.set('Data Setup', 'sequence_for_validation',
+    #             "sentence21 sentence22 sentence23 sentence24 sentence25 sentence26 sentence27 sentence28 sentence29 sentence30 "
+    #             "sentence31 sentence32 sentence33 sentence34 sentence35 sentence36 sentence37 sentence38 sentence39 sentence40")
+    # config.set('Data Setup', 'subject_for_testing', "FaceTalk_170809_00138_TA FaceTalk_170731_00024_TA ")
+    # config.set('Data Setup', 'sequence_for_testing',
+    #             "sentence21 sentence22 sentence23 sentence24 sentence25 sentence26 sentence27 sentence28 sentence29 sentence30 "
+    #             "sentence31 sentence32 sentence33 sentence34 sentence35 sentence36 sentence37 sentence38 sentence39 sentence40")
+
     config.add_section('Data Setup')
     config.set('Data Setup', 'subject_for_training',
-               "FaceTalk_170728_03272_TA FaceTalk_170904_00128_TA FaceTalk_170725_00137_TA FaceTalk_170915_00223_TA"
-               " FaceTalk_170811_03274_TA FaceTalk_170913_03279_TA FaceTalk_170904_03276_TA FaceTalk_170912_03278_TA ")
+                "FaceTalk_170725_00137_TA "
+                "FaceTalk_170728_03272_TA "
+                "FaceTalk_170731_00024_TA "
+                "FaceTalk_170809_00138_TA "
+                "FaceTalk_170811_03274_TA "
+                "FaceTalk_170811_03275_TA "
+                "FaceTalk_170904_00128_TA "
+                "FaceTalk_170904_03276_TA "
+                "FaceTalk_170908_03277_TA "
+                "FaceTalk_170912_03278_TA "
+                "FaceTalk_170913_03279_TA "
+                "FaceTalk_170915_00223_TA ")
     config.set('Data Setup', 'sequence_for_training',
                 "sentence01 sentence02 sentence03 sentence04 sentence05 sentence06 sentence07 sentence08 sentence09 sentence10 "
                 "sentence11 sentence12 sentence13 sentence14 sentence15 sentence16 sentence17 sentence18 sentence19 sentence20 "
                 "sentence21 sentence22 sentence23 sentence24 sentence25 sentence26 sentence27 sentence28 sentence29 sentence30 "
                 "sentence31 sentence32 sentence33 sentence34 sentence35 sentence36 sentence37 sentence38 sentence39 sentence40")
-    config.set('Data Setup', 'subject_for_validation', "FaceTalk_170811_03275_TA FaceTalk_170908_03277_TA")
-    config.set('Data Setup', 'sequence_for_validation',
-                "sentence21 sentence22 sentence23 sentence24 sentence25 sentence26 sentence27 sentence28 sentence29 sentence30 "
-                "sentence31 sentence32 sentence33 sentence34 sentence35 sentence36 sentence37 sentence38 sentence39 sentence40")
-    config.set('Data Setup', 'subject_for_testing', "FaceTalk_170809_00138_TA FaceTalk_170731_00024_TA ")
-    config.set('Data Setup', 'sequence_for_testing',
-                "sentence21 sentence22 sentence23 sentence24 sentence25 sentence26 sentence27 sentence28 sentence29 sentence30 "
-                "sentence31 sentence32 sentence33 sentence34 sentence35 sentence36 sentence37 sentence38 sentence39 sentence40")
+    config.set('Data Setup', 'subject_for_validation',  "")
+    config.set('Data Setup', 'sequence_for_validation', "")
+    config.set('Data Setup', 'subject_for_testing',     "")
+    config.set('Data Setup', 'sequence_for_testing',    "")
 
     config.add_section('Learning Parameters')
     config.set('Learning Parameters', 'batch_size', '64')                     # 64

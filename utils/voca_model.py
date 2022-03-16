@@ -187,10 +187,10 @@ class VOCAModel(BaseModel):
                 if iter % 50 == 0:
                     logging.warning("Epoch: %d | Iter: %d | Global Step: %d | Loss: %.6f | Learning Rate: %.6f" % (epoch, iter, g_step, loss, g_lr))
                     self.train_writer.add_summary(summary, g_step)
-                if iter % 100 == 0:
-                    val_loss, val_summary = self._validation_step()
-                    logging.warning("Validation loss: %.6f" % val_loss)
-                    self.validation_writer.add_summary(val_summary, g_step)
+                # if iter % 100 == 0:
+                #     val_loss, val_summary = self._validation_step()
+                #     logging.warning("Validation loss: %.6f" % val_loss)
+                #     self.validation_writer.add_summary(val_summary, g_step)
 
             if epoch % 10 == 0:
                 self._save(g_step)

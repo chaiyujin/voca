@@ -2,40 +2,11 @@
 set -o errexit
 set -o pipefail
 set -o nounset
-source yk_lib.sh
+
+source yk_scripts/lib.sh
 
 CWD=${PWD}
 TALK_VIDEO_ROOT=$(realpath "${CWD}/../../stylized-sa/data/datasets/talk_video")
-
-# * ---------------------------------------------------------------------------------------------------------------- * #
-# *                                                       Data                                                       * #
-# * ---------------------------------------------------------------------------------------------------------------- * #
-
-function PrepareData() {
-  local DATA_DIR=
-  local DATA_SRC=
-  local SPEAKER=
-  local USE_SEQS=
-  local DEBUG=
-  # Override from arguments
-  for var in "$@"; do
-    case $var in
-      --data_dir=* ) DATA_DIR=${var#*=}  ;;
-      --data_src=* ) DATA_SRC=${var#*=}  ;;
-      --speaker=*  ) SPEAKER=${var#*=}   ;;
-      --use_seqs=* ) USE_SEQS=${var#*=}  ;;
-      --debug      ) DEBUG="--debug"     ;;
-    esac
-  done
-
-  [ -n "$DATA_DIR" ] || { echo "data_dir is not set!"; exit 1; }
-  [ -n "$DATA_SRC" ] || { echo "data_src is not set!"; exit 1; }
-  [ -n "$SPEAKER"  ] || { echo "speaker is not set!";  exit 1; }
-
-  # prepare data
-  RUN_WITH_LOCK_GUARD --tag="Data" --lock_file=$DATA_DIR/../done_data.lock -- \
-    python3 yk_process_data.py --speaker=$SPEAKER --data_src=$DATA_SRC --use_seqs=${USE_SEQS};
-}
 
 # * ---------------------------------------------------------------------------------------------------------------- * #
 # *                                                Collection of steps                                               * #
@@ -75,7 +46,7 @@ function RUN_YK_EXP() {
 
   # other variables
   local EXP_DIR="$CWD/yk_exp/$DATA_SRC/$SPEAKER"
-  local NET_DIR="$EXP_DIR/checkpoints"
+  local NET_DIR="$EXP_DIR/training"
   local RES_DIR="$EXP_DIR/results"
   local DATA_DIR="$EXP_DIR/data"
 
@@ -86,23 +57,21 @@ function RUN_YK_EXP() {
   printf "Ckpt dir  : $NET_DIR\n"
   printf "Results   : $RES_DIR\n"
 
+  # * Step 1: Prepare data
   DRAW_DIVIDER;
-  PrepareData \
-    --data_dir=${DATA_DIR} \
-    --data_src=$DATA_SRC \
-    --speaker=$SPEAKER \
-    --use_seqs=$USE_SEQS \
-    ${DEBUG} \
-  ;
+  RUN_WITH_LOCK_GUARD --tag="Data" --lock_file=$EXP_DIR/done_data.lock -- \
+    python3 -m yk_scripts.process_data --speaker=$SPEAKER --data_src=$DATA_SRC;
 
+  # * Step 2: Train model
   if [ -n "$EPOCH" ]; then
     DRAW_DIVIDER;
     RUN_WITH_LOCK_GUARD --tag="Train" --lock_file=$EXP_DIR/done_train_${EPOCH}.lock -- \
-      python3 yk_train.py --exp_dir=${EXP_DIR} --epoch ${EPOCH};
+      python3 -m yk_scripts.train --exp_dir=${EXP_DIR} --net_dir=${NET_DIR} --epoch ${EPOCH};
   fi
 
+  # * Step 3: Test trained model
   if [ -n "$TEST" ]; then
-    local CKPT="$EXP_DIR/training/checkpoints/gstep_${LOAD_STEP}.model";
+    local CKPT="$NET_DIR/checkpoints/gstep_${LOAD_STEP}.model";
     local TMPL="$EXP_DIR/template.ply"
     local SHARED="--tf_model_fname=$CKPT --template_fname=$TMPL --condition_idx 1 --visualize=False"
 

@@ -264,10 +264,10 @@ class DataHandler:
     def _init_data_splits(self, config, subject_for_training, sequence_for_training, subject_for_validation,
                           sequence_for_validation, subject_for_testing, sequence_for_testing):
         def select_valid_subjects(subjects_list):
-            return [subj for subj in subjects_list]
+            return [subj for subj in subjects_list if len(subj) > 0]
 
         def select_valid_sequences(sequences_list):
-            return [seq for seq in sequences_list]
+            return [seq for seq in sequences_list if len(seq) > 0]
 
         self.training_subjects = select_valid_subjects(subject_for_training)
         self.training_sequences = select_valid_sequences(sequence_for_training)
@@ -288,6 +288,8 @@ class DataHandler:
 
         self.testing_subjects = select_valid_subjects(subject_for_testing)
         self.testing_sequences = select_valid_sequences(sequence_for_testing)
+        # print(self.validation_subjects)
+        # print(self.testing_subjects)
 
         all_instances = []
         for i in self.training_subjects:

@@ -27,7 +27,7 @@ from utils.batcher import Batcher
 from utils.voca_model import VOCAModel as Model
 
 
-def main(exp_dir, epoch):
+def main(exp_dir, net_dir, epoch):
     # Prior to training, please adapt the hyper parameters in the config_parser.py and run the script to generate
     # the training config file use to train your own VOCA model.
     assert os.path.exists(exp_dir)
@@ -42,7 +42,7 @@ def main(exp_dir, epoch):
 
     # Path to cache the processed audio
     config.set('Input Output', 'processed_audio_path', './training_data/processed_audio_%s.pkl' % config.get('Audio Parameters', 'audio_feature_type'))
-    config.set('Input Output', 'checkpoint_dir', os.path.join(exp_dir, 'training'))
+    config.set('Input Output', 'checkpoint_dir', net_dir)
     # celeb related
     config.set('Input Output', 'celeb',                       os.path.basename(exp_dir))
     config.set('Input Output', 'celeb_verts_mmaps_path',      os.path.join(exp_dir, 'data', 'train', 'data_verts.npy'))
@@ -83,7 +83,8 @@ def main(exp_dir, epoch):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp_dir", type=str, required=True)
+    parser.add_argument("--net_dir", type=str, required=True)
     parser.add_argument("--epoch", type=int, required=True)
     args = parser.parse_args()
 
-    main(args.exp_dir, args.epoch)
+    main(args.exp_dir, args.net_dir, args.epoch)
