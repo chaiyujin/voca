@@ -109,9 +109,9 @@ if not os.path.exists(done_flag):
         str2bool(args.visualize),
         uv_template_fname=uv_template_fname,
         texture_img_fname=texture_img_fname,
-        fps=30
+        fps=60
     )
     with open(done_flag, "w") as fp:
         fp.write("")
 
-render_results(out_path, fps=30)
+# render_results(out_path, fps=60)
