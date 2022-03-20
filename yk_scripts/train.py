@@ -27,7 +27,7 @@ from utils.batcher import Batcher
 from utils.voca_model import VOCAModel as Model
 
 
-def main(exp_dir, net_dir, epoch):
+def main(exp_dir, net_dir, epoch, speaker, correct_vocaset_avoffset):
     # Prior to training, please adapt the hyper parameters in the config_parser.py and run the script to generate
     # the training config file use to train your own VOCA model.
     assert os.path.exists(exp_dir)
@@ -41,10 +41,12 @@ def main(exp_dir, net_dir, epoch):
     config.read(init_config_fname)
 
     # Path to cache the processed audio
-    config.set('Input Output', 'processed_audio_path', './training_data/processed_audio_%s.pkl' % config.get('Audio Parameters', 'audio_feature_type'))
     config.set('Input Output', 'checkpoint_dir', net_dir)
+    config.set('Input Output', 'processed_audio_path', './training_data/processed_audio_%s.pkl' % config.get('Audio Parameters', 'audio_feature_type'))
+    if correct_vocaset_avoffset:
+        config.set('Input Output', 'processed_audio_path', './training_data/processed_audio_%s_avoffset_corrected.pkl' % config.get('Audio Parameters', 'audio_feature_type'))
     # celeb related
-    config.set('Input Output', 'celeb',                       os.path.basename(exp_dir))
+    config.set('Input Output', 'celeb',                       speaker)
     config.set('Input Output', 'celeb_verts_mmaps_path',      os.path.join(exp_dir, 'data', 'train', 'data_verts.npy'))
     config.set('Input Output', 'celeb_raw_audio_path',        os.path.join(exp_dir, 'data', 'train', 'raw_audio.pkl'))
     config.set('Input Output', 'celeb_templates_path',        os.path.join(exp_dir, 'data', 'train', 'templates.pkl'))
@@ -85,6 +87,8 @@ if __name__ == '__main__':
     parser.add_argument("--exp_dir", type=str, required=True)
     parser.add_argument("--net_dir", type=str, required=True)
     parser.add_argument("--epoch", type=int, required=True)
+    parser.add_argument("--speaker", type=str, required=True)
+    parser.add_argument("--correct_vocaset_avoffset", action='store_true')
     args = parser.parse_args()
 
-    main(args.exp_dir, args.net_dir, args.epoch)
+    main(args.exp_dir, args.net_dir, args.epoch, args.speaker, args.correct_vocaset_avoffset)

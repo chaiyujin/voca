@@ -15,7 +15,7 @@ TALK_VIDEO_ROOT=$(realpath "${CWD}/../../stylized-sa/data/datasets/talk_video")
 function RUN_YK_EXP() {
   local DATA_SRC=
   local SPEAKER=
-  local USE_SEQS=
+  local AVOFFSET_MS=
   local EPOCH=
   local MEDIA_LIST=
   local TEST=
@@ -24,14 +24,14 @@ function RUN_YK_EXP() {
   # Override from arguments
   for var in "$@"; do
     case $var in
-      --data_src=*  ) DATA_SRC=${var#*=}   ;;
-      --speaker=*   ) SPEAKER=${var#*=}    ;;
-      --use_seqs=*  ) USE_SEQS=${var#*=}   ;;
-      --epoch=*     ) EPOCH=${var#*=}      ;;
-      --media_list=*) MEDIA_LIST=${var#*=} ;;
-      --load_step=* ) LOAD_STEP=${var#*=}  ;;
-      --test        ) TEST="true"          ;;
-      --debug       ) DEBUG="--debug"      ;;
+      --data_src=*   ) DATA_SRC=${var#*=}    ;;
+      --speaker=*    ) SPEAKER=${var#*=}     ;;
+      --avoffset_ms=*) AVOFFSET_MS=${var#*=} ;;
+      --epoch=*      ) EPOCH=${var#*=}       ;;
+      --media_list=* ) MEDIA_LIST=${var#*=}  ;;
+      --load_step=*  ) LOAD_STEP=${var#*=}   ;;
+      --test         ) TEST="true"           ;;
+      --debug        ) DEBUG="--debug"       ;;
     esac
   done
   # Check variables
@@ -46,6 +46,10 @@ function RUN_YK_EXP() {
 
   # other variables
   local EXP_DIR="$CWD/yk_exp/$DATA_SRC/$SPEAKER"
+  if [ -n "${AVOFFSET_MS}" ]; then
+    EXP_DIR="${EXP_DIR}/avoffset_corrected"
+  fi
+
   local NET_DIR="$EXP_DIR/training"
   local RES_DIR="$EXP_DIR/results"
   local DATA_DIR="$EXP_DIR/data"
@@ -57,16 +61,37 @@ function RUN_YK_EXP() {
   printf "Ckpt dir  : $NET_DIR\n"
   printf "Results   : $RES_DIR\n"
 
-  # * Step 1: Prepare data
-  DRAW_DIVIDER;
-  RUN_WITH_LOCK_GUARD --tag="Data" --lock_file=$EXP_DIR/done_data.lock -- \
-    python3 -m yk_scripts.process_data --speaker=$SPEAKER --data_src=$DATA_SRC;
-
-  # * Step 2: Train model
-  if [ -n "$EPOCH" ]; then
+  if [ -n "${AVOFFSET_MS}" ]; then
+    # * Step 0: Correct vocaset avoffset
     DRAW_DIVIDER;
-    RUN_WITH_LOCK_GUARD --tag="Train" --lock_file=$EXP_DIR/done_train_${EPOCH}.lock -- \
-      python3 -m yk_scripts.train --exp_dir=${EXP_DIR} --net_dir=${NET_DIR} --epoch ${EPOCH};
+    python3 -m yk_scripts.correct_vocaset_avoffset;
+
+    # * Step 1: Prepare data
+    DRAW_DIVIDER;
+    RUN_WITH_LOCK_GUARD --tag="Data" --lock_file=$EXP_DIR/done_data.lock -- \
+      python3 -m yk_scripts.process_data --data_src=$DATA_SRC --speaker=$SPEAKER --avoffset_ms=$AVOFFSET_MS --data_dir=${DATA_DIR};
+    
+    # * Step 2: Train model
+    if [ -n "$EPOCH" ]; then
+      DRAW_DIVIDER;
+      RUN_WITH_LOCK_GUARD --tag="Train" --lock_file=$EXP_DIR/done_train_${EPOCH}.lock -- \
+        python3 -m yk_scripts.train \
+          --exp_dir=${EXP_DIR} --net_dir=${NET_DIR} --epoch ${EPOCH} \
+          --speaker=${SPEAKER} --correct_vocaset_avoffset;
+    fi
+
+  else
+    # * Step 1: Prepare data
+    DRAW_DIVIDER;
+    RUN_WITH_LOCK_GUARD --tag="Data" --lock_file=$EXP_DIR/done_data.lock -- \
+      python3 -m yk_scripts.process_data --speaker=$SPEAKER --data_src=$DATA_SRC;
+
+    # * Step 2: Train model
+    if [ -n "$EPOCH" ]; then
+      DRAW_DIVIDER;
+      RUN_WITH_LOCK_GUARD --tag="Train" --lock_file=$EXP_DIR/done_train_${EPOCH}.lock -- \
+        python3 -m yk_scripts.train --exp_dir=${EXP_DIR} --net_dir=${NET_DIR} --epoch ${EPOCH} --speaker=${SPEAKER};
+    fi
   fi
 
   # * Step 3: Test trained model

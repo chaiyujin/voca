@@ -275,6 +275,7 @@ class DataHandler:
         # HACK: hard-coded celeb data
         celeb = load_from_config(config, "celeb")
         self.training_subjects = [celeb] + self.training_subjects  # always at first
+        print(self.training_subjects)
         for seq in self.data2array_verts[celeb]:
             if seq.startswith("trn"):
                 self.training_sequences.append(seq)
