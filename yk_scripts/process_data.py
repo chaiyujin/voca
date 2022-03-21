@@ -75,7 +75,8 @@ def process_celeb(speaker, src_dir, dat_dir, avoffset_ms):
         with open(info_path) as fp:
             data_info = json.load(fp)
             fps = data_info['fps']
-        # handle avoffset
+
+        # > remove avoffset
         if avoffset_ms is not None:
             assert avoffset_ms == data_info['avoffset_ms']
             tqdm.write("> Handling avoffset_ms: {}".format(avoffset_ms))
@@ -83,8 +84,9 @@ def process_celeb(speaker, src_dir, dat_dir, avoffset_ms):
             if avoffset > 0:  # audio ts larger than video, so delay video
                 padding = frames[:1].repeat(avoffset, axis=0)
                 frames = np.concatenate((padding, frames), axis=0)
-            else:  # audio ts smaller than video, so clip video
-                frames = frames[avoffset:]
+            elif avoffset < 0:  # audio ts smaller than video, so clip video
+                frames = frames[-avoffset:]
+
         # upsample to 60 fps
         frames = np.reshape(frames, (len(frames), 5023 * 3))
         frames = interpolate_features(frames, fps, 60)

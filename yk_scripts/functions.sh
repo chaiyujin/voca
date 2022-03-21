@@ -39,15 +39,13 @@ function RUN_YK_EXP() {
   [ -n "$SPEAKER"   ] || { echo "speaker is not set!";   exit 1; }
   # to lower case
   DATA_SRC="${DATA_SRC,,}"
-  # to abspath
-  if [ -n "$MEDIA_LIST" ] && [ "${MEDIA_LIST:0:1}" != "/" ]; then
-    MEDIA_LIST=${CWD}/${MEDIA_LIST}
-  fi
 
   # other variables
-  local EXP_DIR="$CWD/yk_exp/$DATA_SRC/$SPEAKER"
+  local EXP_DIR=
   if [ -n "${AVOFFSET_MS}" ]; then
-    EXP_DIR="${EXP_DIR}/avoffset_corrected"
+    EXP_DIR="$CWD/yk_exp/avoffset_corrected/$DATA_SRC/$SPEAKER"
+  else
+    EXP_DIR="$CWD/yk_exp/avoffset/$DATA_SRC/$SPEAKER"
   fi
 
   local NET_DIR="$EXP_DIR/training"
@@ -61,17 +59,21 @@ function RUN_YK_EXP() {
   printf "Ckpt dir  : $NET_DIR\n"
   printf "Results   : $RES_DIR\n"
 
+  # * -------------------------------------------------------------------------------------------------------------- * #
+  # * Case: Correct avoffset of data (including vocaset), avoffset is manually labelled
+  # * -------------------------------------------------------------------------------------------------------------- * #
   if [ -n "${AVOFFSET_MS}" ]; then
-    # * Step 0: Correct vocaset avoffset
+
+    # > Step 0: Correct vocaset avoffset
     DRAW_DIVIDER;
     python3 -m yk_scripts.correct_vocaset_avoffset;
 
-    # * Step 1: Prepare data
+    # > Step 1: Prepare data
     DRAW_DIVIDER;
     RUN_WITH_LOCK_GUARD --tag="Data" --lock_file=$EXP_DIR/done_data.lock -- \
       python3 -m yk_scripts.process_data --data_src=$DATA_SRC --speaker=$SPEAKER --avoffset_ms=$AVOFFSET_MS --data_dir=${DATA_DIR};
     
-    # * Step 2: Train model
+    # > Step 2: Train model
     if [ -n "$EPOCH" ]; then
       DRAW_DIVIDER;
       RUN_WITH_LOCK_GUARD --tag="Train" --lock_file=$EXP_DIR/done_train_${EPOCH}.lock -- \
@@ -80,13 +82,17 @@ function RUN_YK_EXP() {
           --speaker=${SPEAKER} --correct_vocaset_avoffset;
     fi
 
+  # * -------------------------------------------------------------------------------------------------------------- * #
+  # * Case: Keep avoffset unchanged
+  # * -------------------------------------------------------------------------------------------------------------- * #
   else
-    # * Step 1: Prepare data
+
+    # > Step 1: Prepare data
     DRAW_DIVIDER;
     RUN_WITH_LOCK_GUARD --tag="Data" --lock_file=$EXP_DIR/done_data.lock -- \
       python3 -m yk_scripts.process_data --speaker=$SPEAKER --data_src=$DATA_SRC;
 
-    # * Step 2: Train model
+    # > Step 2: Train model
     if [ -n "$EPOCH" ]; then
       DRAW_DIVIDER;
       RUN_WITH_LOCK_GUARD --tag="Train" --lock_file=$EXP_DIR/done_train_${EPOCH}.lock -- \
@@ -94,7 +100,9 @@ function RUN_YK_EXP() {
     fi
   fi
 
-  # * Step 3: Test trained model
+  # * -------------------------------------------------------------------------------------------------------------- * #
+  # * Test trained model
+  # * -------------------------------------------------------------------------------------------------------------- * #
   if [ -n "$TEST" ]; then
     local CKPT="$NET_DIR/checkpoints/gstep_${LOAD_STEP}.model";
     local TMPL="$EXP_DIR/template.ply"
@@ -112,6 +120,10 @@ function RUN_YK_EXP() {
 
     # media_list if given
     if [ -n "${MEDIA_LIST}" ]; then
+      # to abspath
+      if [ -n "$MEDIA_LIST" ] && [ "${MEDIA_LIST:0:1}" != "/" ]; then
+        MEDIA_LIST=${CWD}/${MEDIA_LIST}
+      fi
       local media_list=$(LoadMediaList ${MEDIA_LIST});
       for media_info in $media_list; do
         IFS='|' read -ra ADDR <<< "$media_info"
