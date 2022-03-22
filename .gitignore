@@ -9,3 +9,4 @@ results/
 template/*.ply
 yk_exp/
 tmp.sh
+tmp*.sh
